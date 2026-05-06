@@ -9,6 +9,11 @@ public class ProjectileLauncher : MonoBehaviour
     [SerializeField] private Transform leftForkTip;
     [SerializeField] private Transform rightForkTip;
     [SerializeField] private GameObject Ball;
+    private Vector2 ball_initial_pos;
+
+    [SerializeField] private LineRenderer trajectoryLine;
+    [SerializeField] private float timeStep = 0.05f;
+    [SerializeField] private int PointCount = 30;
 
     Rigidbody2D ball_rb;
     
@@ -64,13 +69,24 @@ public class ProjectileLauncher : MonoBehaviour
         return false;
     }
 
+    private void OnEnable()
+    {
+        GameManager.instance.OnResetBallPos += Reset;
+    }
+    private void OnDisable()
+    {
+        GameManager.instance.OnResetBallPos -= Reset;
+    }
 
-    
     private void Start()
     {
         cam = Camera.main;
         ball_rb = Ball.GetComponent<Rigidbody2D>();
 
+        ball_initial_pos = Ball.transform.position;
+
+        trajectoryLine.useWorldSpace = true;
+        trajectoryLine.gameObject.SetActive(false);
 
         leftBand.gameObject.SetActive(false);
         rightBand.gameObject.SetActive(false);
@@ -90,14 +106,14 @@ public class ProjectileLauncher : MonoBehaviour
             RaycastHit2D hit = Physics2D.Raycast(MousePos , Vector2.zero);
             if(hit.collider != null)
             {
-                if(hit.transform == transform)
+                if(hit.transform == Ball.transform)
                 {
                     isDragging = true;
 
                     leftBand.gameObject.SetActive(true);
                     rightBand.gameObject.SetActive(true);
-                    
-                    ball_rb.simulated = false;
+                    ball_rb.bodyType = RigidbodyType2D.Static;
+
                 }
             }
         }
@@ -114,9 +130,16 @@ public class ProjectileLauncher : MonoBehaviour
 
             pullPosition = (Vector2)centerPoint.position + pullDir;
 
+            Vector2 launchDir = (Vector2)centerPoint.position - pullPosition;
+            float force = launchDir.magnitude * launchForceMultiplier;
+            Vector2 predictVelocity = launchDir.normalized * force / ball_rb.mass;
+
+            ShowTrajectory(pullPosition, predictVelocity);
+
+
             float stretchAmount = pullDir.magnitude / maxPullDistance;
-            float squishX = 1f + stretchAmount * 0.2f;
-            float squishY = 1f - stretchAmount * 0.1f;
+            float squishX = 0.2f + stretchAmount * 0.02f;
+            float squishY = 0.2f - stretchAmount * 0.01f;
 
             Ball.transform.localScale = new Vector2(squishX, squishY);
             Ball.transform.position = pullPosition;
@@ -128,21 +151,51 @@ public class ProjectileLauncher : MonoBehaviour
 
         if (PointerReleasedThisFrame() && isDragging)
         {
-            isDragging = false;
+            HideTrajectory();
+
+            Ball.GetComponent<TrailRenderer>().enabled = true;
 
             Vector2 launchDir = (Vector2)centerPoint.position - pullPosition;
             float force = launchDir.magnitude * launchForceMultiplier;
 
-            ball_rb.simulated = true;
+            ball_rb.bodyType = RigidbodyType2D.Dynamic;
             ball_rb.AddForce(launchDir.normalized * force, ForceMode2D.Impulse);
 
-            Ball.transform.localScale = Vector2.one;
+            Ball.transform.localScale = new Vector2(0.2f , 0.2f);
             
 
             leftBand.gameObject.SetActive(false);
             rightBand.gameObject.SetActive(false);
+
+            isDragging = false;
         }
     }
 
-   
+    void ShowTrajectory(Vector2 startPos , Vector2 velocity)
+    {
+        trajectoryLine.gameObject.SetActive(true);
+        trajectoryLine.positionCount = PointCount;
+
+        for(int i = 0; i < PointCount; i++)
+        {
+            float t = i * timeStep;
+
+            Vector2 point = startPos + velocity * t + 0.5f * Physics2D.gravity * t * t;
+
+            trajectoryLine.SetPosition(i, point);
+        }
+    }
+
+    void HideTrajectory()
+    {
+        trajectoryLine.gameObject.SetActive(false);
+    }
+
+    private void Reset()
+    {
+        Ball.GetComponent<TrailRenderer>().enabled = false;
+        Ball.transform.position = ball_initial_pos;
+        ball_rb.bodyType = RigidbodyType2D.Static;
+    }
+
 }
