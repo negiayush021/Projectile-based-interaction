@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -8,6 +9,8 @@ public class GameManager : MonoBehaviour
     {
         instance = this;
     }
+
+    [SerializeField] GameObject R_btn;
 
     private void Start()
     {
@@ -20,6 +23,12 @@ public class GameManager : MonoBehaviour
     public void ResetBallPos()
     {
         OnResetBallPos?.Invoke();
+        R_btn.SetActive(false);
+    }
+
+    public void ShowRestartBtn()
+    {
+        R_btn.SetActive(true);
     }
 
 }

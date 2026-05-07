@@ -127,8 +127,8 @@ public class ProjectileLauncher : MonoBehaviour
             {
                 pullDir = pullDir.normalized * maxPullDistance;
             }
-
             pullPosition = (Vector2)centerPoint.position + pullDir;
+
 
             Vector2 launchDir = (Vector2)centerPoint.position - pullPosition;
             float force = launchDir.magnitude * launchForceMultiplier;
@@ -137,13 +137,14 @@ public class ProjectileLauncher : MonoBehaviour
             ShowTrajectory(pullPosition, predictVelocity);
 
 
+            // stretch effect
             float stretchAmount = pullDir.magnitude / maxPullDistance;
             float squishX = 0.2f + stretchAmount * 0.02f;
             float squishY = 0.2f - stretchAmount * 0.01f;
 
             Ball.transform.localScale = new Vector2(squishX, squishY);
             Ball.transform.position = pullPosition;
-
+            //---------
 
             leftBand.SetPosition(1, pullPosition);
             rightBand.SetPosition(1, pullPosition);

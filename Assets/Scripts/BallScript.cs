@@ -11,10 +11,19 @@ public class BallScript : MonoBehaviour
 
     private Camera cam;
     private Vector2 camOriginalPos;
+    private Rigidbody2D rb;
+
+    private Animator text_animator;
+
+
+
     private void Start()
     {
         cam = Camera.main;
         camOriginalPos = (Vector2)cam.transform.position;
+        rb = GetComponent<Rigidbody2D>();
+
+        text_animator = score_txt.GetComponent<Animator>();
     }
 
 
@@ -24,6 +33,9 @@ public class BallScript : MonoBehaviour
         {
             score++;
             score_txt.text = score.ToString();
+            GameManager.instance.ResetBallPos();
+
+            text_animator.Play("Bloom");
         }
 
         if(collision.tag == "OutsideCollider")
@@ -31,6 +43,7 @@ public class BallScript : MonoBehaviour
             StartCoroutine(CameraShakeEffect());
             score = 0;
             score_txt.text = score.ToString();
+            rb.bodyType = RigidbodyType2D.Static;
         }
     }
 
@@ -57,5 +70,6 @@ public class BallScript : MonoBehaviour
         cam.transform.position = new Vector3(camOriginalPos.x, camOriginalPos.y, -10);
 
         AlertIMG.SetActive(false);
+        GameManager.instance.ShowRestartBtn();
     }
 }
