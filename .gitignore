@@ -106,3 +106,8 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ss]ceneDependencyCache*
 
 Projectile-based interaction_BurstDebugInformation_DoNotShip/
+
+# Unity - Do not ship
+basketball_BackUpThisFolder_ButDontShipItWithYourGame/
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*_BurstDebugInformation_DoNotShip/
